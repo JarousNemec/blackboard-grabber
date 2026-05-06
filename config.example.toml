@@ -1,0 +1,56 @@
+# ============================================================
+# Blackboard Course Backup Tool — konfigurace
+# ============================================================
+# 1) Zkopíruj tento soubor jako `config.toml`
+# 2) Vyplň sekci [blackboard] (povinné)
+# 3) Ostatní sekce mají rozumné defaulty, uprav podle potřeby
+
+[blackboard]
+# Base URL Blackboard instance vaší školy, BEZ trailing slashe.
+# Příklad: "https://elearning.tvoje-skola.cz" nebo "https://blackboard.univerzita.cz"
+# Najdeš v adresním řádku po přihlášení do Blackboardu.
+base_url = ""
+
+# Cesta k souboru s vyexportovanými session cookies (Netscape format).
+# Jak získat:
+#   1. Přihlas se do Blackboardu v prohlížeči (přes SSO školy)
+#   2. Nainstaluj rozšíření "Get cookies.txt LOCALLY" (Chrome) nebo "cookies.txt" (Firefox)
+#   3. Na otevřené stránce Blackboardu klikni na rozšíření → Export
+#   4. Ulož výsledný soubor a zadej sem jeho cestu (relativní k projektu nebo absolutní)
+cookies_file = "cookies.txt"
+
+[paths]
+# Kam se ukládá stažený obsah kurzů.
+output_dir = "output"
+
+# Kam se ukládá stav (tree.json s výběrem, manifest.json s logem stažení).
+state_dir = "state"
+
+# Logy.
+log_dir = "logs"
+
+[download]
+# Pauza mezi requesty na Blackboard server (ms). Defaultně konzervativní,
+# zvyš pokud narazíš na rate-limit (429) nebo WAF blokování.
+request_delay_ms = 200
+
+# Maximální počet pokusů při síťové chybě (exponential backoff: 1s, 2s, 4s, ...).
+max_retries = 3
+
+# Timeout HTTP requestu (s).
+http_timeout_s = 30
+
+# Pokud true, kontroluje velikost už staženého souboru proti API.
+# Pokud nesouhlasí, soubor se stáhne znovu. Pokud false, existence stačí.
+verify_size = true
+
+[tui]
+# Default stav checkboxů v stromě po `bb-backup tree` — true = vše vybráno.
+default_select_all = true
+
+[logging]
+# DEBUG | INFO | WARNING | ERROR
+level = "INFO"
+
+# Pokud true, paralelně i do konzole. Pokud false, jen do souboru.
+console = true

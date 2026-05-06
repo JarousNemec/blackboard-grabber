@@ -1,0 +1,18 @@
+# bb-backup
+config.toml
+cookies.txt
+output/
+state/
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/

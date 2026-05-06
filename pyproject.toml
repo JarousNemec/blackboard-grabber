@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bb-backup"
+version = "0.1.0"
+description = "Lokální záloha kurzů z Blackboard Learn LMS přes interní API."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Jarda" }]
+license = { text = "MIT" }
+dependencies = [
+    "requests>=2.31",
+    "textual>=0.58",
+    "typer>=0.12",
+    "rich>=13.7",
+    "pydantic>=2.6",
+    "beautifulsoup4>=4.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "responses>=0.25",
+]
+
+[project.scripts]
+bb-backup = "bb_backup.cli:app"
+
+[tool.setuptools.packages.find]
+include = ["bb_backup*"]
+exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+bb_backup = ["_resources/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
