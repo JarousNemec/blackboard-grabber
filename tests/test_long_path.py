@@ -1,8 +1,8 @@
 r"""Testy pro long_path() helper a chování s cestami delšími než MAX_PATH=260.
 
 Kritické na Windows: bez `\\?\` prefixu Win32 API selže s ENOENT pro cesty
-≥ 260 znaků. Reprodukuje se reálnou UHK strukturou s českou diakritikou
-v názvech (Obsah\<dlouhá kapitola>\<dlouhá podkapitola>\<dlouhý PDF>.pdf).
+≥ 260 znaků. Reprodukuje se typickou Blackboard strukturou kurzů s českou
+diakritikou (Obsah\<dlouhá kapitola>\<dlouhá podkapitola>\<dlouhý PDF>.pdf).
 """
 
 from __future__ import annotations
@@ -55,8 +55,8 @@ def test_open_with_very_long_path(tmp_path):
     """End-to-end: vytvoř cestu > 260 znaků a ověř, že open() projde
     přes long_path() obal. Na non-Windows tohle samozřejmě prošlo už dřív
     (bez limitu), tady jen kontrolujeme, že náš helper nic nerozbije."""
-    # Postavíme vnořený strom hluboké cesty s unicode jmény (jako reálná
-    # UHK struktura). Cílíme nad 260 znaků celkové délky.
+    # Postavíme vnořený strom hluboké cesty s unicode jmény (typická
+    # Blackboard struktura kurzu). Cílíme nad 260 znaků celkové délky.
     parent = tmp_path
     for chunk in [
         "Úvod do objektového modelování",
@@ -64,7 +64,7 @@ def test_open_with_very_long_path(tmp_path):
         "Zavedení návrhových prvků do modelu tříd I - datové typy",
     ]:
         parent = parent / chunk
-    filename = "UOMO C07 - Zavedení návrhových prvků do modelu tříd I.pdf"
+    filename = "C07 - Zavedení návrhových prvků do modelu tříd I.pdf"
     full_path = parent / filename
 
     # Tenhle assert je jádro testu — bez něj test ztrácí smysl.

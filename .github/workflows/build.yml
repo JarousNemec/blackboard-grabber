@@ -1,0 +1,117 @@
+name: Build Windows Executable
+
+on:
+  push:
+    branches: [master, main]
+    tags: ['v*']
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: write  # needed for creating releases on tag pushes
+
+jobs:
+  test-and-build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install package + dev + build deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install nuitka ordered-set zstandard
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: Build standalone exe with Nuitka
+        run: |
+          python -m nuitka `
+            --standalone `
+            --assume-yes-for-downloads `
+            --output-dir=dist `
+            --output-filename=bb-backup.exe `
+            --include-package=bb_backup `
+            --include-package-data=bb_backup `
+            --include-package=textual `
+            --include-package-data=textual `
+            --include-package=rich `
+            --include-package=tomli_w `
+            --include-package=pydantic `
+            --include-package=pydantic_core `
+            --include-package=typer `
+            --include-package=click `
+            --include-package=bs4 `
+            --enable-plugin=anti-bloat `
+            --company-name="bb-backup" `
+            --product-name="bb-backup" `
+            --file-version=0.1.0.0 `
+            --product-version=0.1.0.0 `
+            --file-description="Blackboard Learn LMS course backup tool" `
+            --copyright="MIT License" `
+            --remove-output `
+            launcher.py
+
+      - name: Smoke-test the built exe
+        run: |
+          .\dist\launcher.dist\bb-backup.exe version
+          .\dist\launcher.dist\bb-backup.exe --help
+
+      - name: Resolve version label
+        id: version
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF -like 'refs/tags/v*') {
+            $label = $env:GITHUB_REF -replace 'refs/tags/', ''
+          } else {
+            $label = "$($env:GITHUB_REF_NAME)-$($env:GITHUB_SHA.Substring(0,7))"
+          }
+          # Sanitize forward/backslashes (branch names) so the file name stays valid.
+          $label = $label -replace '[\\/]', '-'
+          "label=$label" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "Build label: $label"
+
+      - name: Stage dist folder
+        shell: pwsh
+        run: |
+          $folder = "bb-backup-windows-x64-${{ steps.version.outputs.label }}"
+          Rename-Item -Path dist\launcher.dist -NewName $folder
+          "folder=$folder" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        id: stage
+
+      - name: Create zip archive
+        shell: pwsh
+        run: |
+          $folder = "${{ steps.stage.outputs.folder }}"
+          $zip = "dist\$folder.zip"
+          Compress-Archive -Path "dist\$folder" -DestinationPath $zip
+          Get-Item $zip | Format-List FullName, Length
+          "zip=$zip" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        id: zip
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.stage.outputs.folder }}
+          path: ${{ steps.zip.outputs.zip }}
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Publish GitHub Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.zip.outputs.zip }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true

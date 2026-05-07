@@ -44,13 +44,13 @@ def test_get_me(tmp_path):
     responses.add(
         responses.GET,
         "https://bb.example.com/learn/api/v1/users/me",
-        json={"id": "_42_1", "userName": "jarda"},
+        json={"id": "_42_1", "userName": "testuser"},
         status=200,
     )
     client = BlackboardClient(cfg)
     me = client.get_me()
     assert me.id == "_42_1"
-    assert me.userName == "jarda"
+    assert me.userName == "testuser"
 
 
 @responses.activate

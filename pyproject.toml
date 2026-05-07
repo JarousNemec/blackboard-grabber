@@ -8,7 +8,6 @@ version = "0.1.0"
 description = "Lokální záloha kurzů z Blackboard Learn LMS přes interní API."
 readme = "README.md"
 requires-python = ">=3.11"
-authors = [{ name = "Jarda" }]
 license = { text = "MIT" }
 dependencies = [
     "requests>=2.31",
@@ -25,6 +24,11 @@ dev = [
     "pytest>=8.0",
     "responses>=0.25",
 ]
+build = [
+    "nuitka>=2.0",
+    "ordered-set>=4.1",
+    "zstandard>=0.22",
+]
 
 [project.scripts]
 bb-backup = "bb_backup.cli:app"
@@ -34,7 +38,7 @@ include = ["bb_backup*"]
 exclude = ["tests*"]
 
 [tool.setuptools.package-data]
-bb_backup = ["_resources/*"]
+bb_backup = ["_resources/config.example.toml", "_resources/gitignore.tpl"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

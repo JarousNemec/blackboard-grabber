@@ -90,7 +90,10 @@ def _prompt_base_url(default: str) -> str:
         kwargs: dict = {"console": console}
         if default:
             kwargs["default"] = default
-        value = Prompt.ask("URL Blackboard instance (např. https://oliva.uhk.cz)", **kwargs)
+        value = Prompt.ask(
+            "URL Blackboard instance (např. https://blackboard.priklad.cz)",
+            **kwargs,
+        )
         value = value.strip().rstrip("/")
         if not value:
             err_console.print("URL je prázdné.")
