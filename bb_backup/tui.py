@@ -108,6 +108,7 @@ class PickerApp(App):
         Binding("space", "toggle_one", "Vybrat", priority=True),
         Binding("ctrl+a", "select_all", "Vše", priority=True),
         Binding("ctrl+s", "save", "Uložit", priority=True),
+        Binding("ctrl+d", "download_now", "Stáhnout", priority=True),
         Binding("ctrl+c", "clear_all", "Vyčistit", priority=True),
         Binding("escape", "quit_app", "Konec", priority=True),
     ]
@@ -117,6 +118,7 @@ class PickerApp(App):
         self.tree_data = tree_data
         self.save_path = save_path
         self.dirty = False
+        self.exit_action: str | None = None  # "download" | None — čte wizard po .run()
         self._stats_widget: Static | None = None
         self._node_map: dict[int, TreeNode] = {}  # widget_node_id -> data node
 
@@ -240,6 +242,12 @@ class PickerApp(App):
         self.dirty = False
         self._refresh_stats()
         self.notify(f"Uloženo do {self.save_path.name}")
+
+    def action_download_now(self) -> None:
+        save_tree(self.tree_data, self.save_path)
+        self.dirty = False
+        self.exit_action = "download"
+        self.exit()
 
     def action_quit_app(self) -> None:
         if not self.dirty:

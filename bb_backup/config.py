@@ -94,6 +94,29 @@ class Config(BaseModel):
         return self.resolve_path(self.paths.log_dir)
 
 
+def save_blackboard_settings(path: Path, base_url: str, cookies_file: str) -> None:
+    """Zapíše base_url a cookies_file do config.toml. Soubor vytvoří pokud
+    neexistuje. Pokud existuje, ostatní sekce ([paths], [download], ...)
+    zůstanou zachované, ale komentáře se ztratí (tomli-w je round-trip
+    neumí). Atomic rename pattern stejný jako jinde v kódu."""
+    import tomli_w  # lazy — používá se jen z wizardu
+
+    if path.is_file():
+        with path.open("rb") as f:
+            data = tomllib.load(f)
+    else:
+        data = {}
+    data.setdefault("blackboard", {})
+    data["blackboard"]["base_url"] = base_url
+    data["blackboard"]["cookies_file"] = cookies_file
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with tmp.open("wb") as f:
+        tomli_w.dump(data, f)
+    tmp.replace(path)
+
+
 def find_config_file() -> Path | None:
     cwd = Path.cwd() / "config.toml"
     if cwd.is_file():

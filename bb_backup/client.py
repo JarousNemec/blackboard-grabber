@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import http.cookiejar
 import logging
+import os
 import time
 from pathlib import Path
 from typing import Any, Iterator
@@ -18,6 +19,7 @@ from .models import (
     PagedResponse,
     User,
 )
+from .utils import long_path
 
 logger = logging.getLogger("bb_backup.client")
 
@@ -355,18 +357,23 @@ class BlackboardClient:
         return self._stream_to_file(url_or_path, dest)
 
     def _stream_to_file(self, path_or_url: str, dest: Path) -> int:
-        """Streamuje URL do `dest` přes mezisoubor a atomické přejmenování."""
-        dest.parent.mkdir(parents=True, exist_ok=True)
+        r"""Streamuje URL do `dest` přes mezisoubor a atomické přejmenování.
+
+        Cesty obalujeme `long_path()` — na Windows se `dest` v hlubokých
+        output stromech s českou diakritikou snadno dostane přes MAX_PATH=260,
+        a bez `\\?\` prefixu by `open()` skončil ENOENT (FileNotFoundError).
+        """
+        os.makedirs(long_path(dest.parent), exist_ok=True)
         tmp = dest.with_suffix(dest.suffix + ".tmp")
         resp = self._request("GET", path_or_url, stream=True, allow_redirects=True)
         total = 0
         try:
-            with open(tmp, "wb") as f:
+            with open(long_path(tmp), "wb") as f:
                 for chunk in resp.iter_content(chunk_size=_STREAM_CHUNK_SIZE):
                     if chunk:
                         f.write(chunk)
                         total += len(chunk)
         finally:
             resp.close()
-        tmp.replace(dest)
+        os.replace(long_path(tmp), long_path(dest))
         return total

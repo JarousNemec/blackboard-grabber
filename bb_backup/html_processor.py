@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import re
 from pathlib import Path
 from urllib.parse import unquote, urlparse
@@ -8,7 +9,7 @@ from urllib.parse import unquote, urlparse
 from bs4 import BeautifulSoup
 
 from .client import BlackboardClient, BlackboardError
-from .utils import clean_url, sanitize_filename, unique_path
+from .utils import clean_url, long_path, sanitize_filename, unique_path
 
 logger = logging.getLogger("bb_backup.html_processor")
 
@@ -73,7 +74,7 @@ def _download_asset(
     xid_match = _XID_RE.search(url)
     fallback = f"asset-{xid_match.group(1)}" if xid_match else "asset"
     proposed = _resolve_asset_filename(url, fallback)
-    assets_dir.mkdir(parents=True, exist_ok=True)
+    os.makedirs(long_path(assets_dir), exist_ok=True)
     dest = unique_path(assets_dir, proposed)
 
     try:

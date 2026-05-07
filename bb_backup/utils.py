@@ -1,11 +1,37 @@
 from __future__ import annotations
 
+import os
 import re
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 _FORBIDDEN = re.compile(r'[/\\:*?"<>|\x00-\x1f]')
 _MAX_LEN = 200
+
+
+def long_path(p: Path | str) -> str:
+    r"""Vrátí cestu vhodnou pro Win32 API i nad MAX_PATH=260 znaků.
+
+    Na Windows bez `\\?\` prefixu selžou `open()`, `os.stat()`, `os.replace()`
+    apod. s ENOENT pro cesty ≥ 260 znaků (typicky pro hluboké zanoření v
+    output/ s českou diakritikou v názvech). Tento helper předponu doplní
+    a zároveň cestu absolutizuje + normalizuje (`\\?\` nesnese `..` ani `.`).
+
+    Na non-Windows platformách vrátí jen `str(p)` (žádný no-op overhead).
+    Použij u všech `open()`, `os.makedirs()`, `os.stat()`, `os.replace()`
+    voláních, jejichž cíl může být v hluboké output cestě.
+    """
+    s = str(p)
+    if sys.platform != "win32":
+        return s
+    if s.startswith("\\\\?\\") or s.startswith("\\\\.\\"):
+        return s
+    abs_s = os.path.abspath(s)
+    if abs_s.startswith("\\\\"):
+        # UNC: \\server\share -> \\?\UNC\server\share
+        return "\\\\?\\UNC\\" + abs_s[2:]
+    return "\\\\?\\" + abs_s
 
 # Vzor pro Blackboard interní path k souborům (`/bbcswebdav/.../xid-xxx`).
 BBCSWEBDAV_RE = re.compile(r'/bbcswebdav/[^\s"\'<>]+')
@@ -63,7 +89,7 @@ def unique_path(directory: Path, name: str) -> Path:
     """Vrátí cestu, která v `directory` neexistuje. Při kolizi přidá `_2`, `_3`, ..."""
     base = Path(name)
     candidate = directory / base
-    if not candidate.exists():
+    if not os.path.exists(long_path(candidate)):
         return candidate
 
     stem = base.stem
@@ -71,6 +97,6 @@ def unique_path(directory: Path, name: str) -> Path:
     i = 2
     while True:
         candidate = directory / f"{stem}_{i}{suffix}"
-        if not candidate.exists():
+        if not os.path.exists(long_path(candidate)):
             return candidate
         i += 1

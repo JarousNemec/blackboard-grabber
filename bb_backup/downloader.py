@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import os
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
@@ -22,7 +23,7 @@ from .client import AuthError, BlackboardClient, BlackboardError
 from .config import Config
 from .logging_setup import errors_log_path
 from .tree import AttachmentNode, CourseTree, TreeNode, iter_selected
-from .utils import clean_url, iso_now, sanitize_filename
+from .utils import clean_url, iso_now, long_path, sanitize_filename
 
 logger = logging.getLogger("bb_backup.downloader")
 
@@ -136,21 +137,22 @@ class Downloader:
     # -----------------------------
 
     def _file_already_done(self, rel_path: str, abs_path: Path, expected_size: int | None) -> bool:
-        if not abs_path.is_file():
+        lp = long_path(abs_path)
+        if not os.path.isfile(lp):
             return False
         if not self.config.download.verify_size:
             return rel_path in self._manifest
         if expected_size is None:
             return rel_path in self._manifest
         try:
-            actual = abs_path.stat().st_size
+            actual = os.stat(lp).st_size
         except OSError:
             return False
         return actual == expected_size
 
     def _sha256(self, path: Path) -> str:
         h = hashlib.sha256()
-        with path.open("rb") as f:
+        with open(long_path(path), "rb") as f:
             for chunk in iter(lambda: f.read(_HASH_BLOCK_SIZE), b""):
                 h.update(chunk)
         return h.hexdigest()
@@ -176,7 +178,7 @@ class Downloader:
             progress.update(task_id, description=f"[skip] {filename}", advance=0)
             return True, 0
 
-        node_dir.mkdir(parents=True, exist_ok=True)
+        os.makedirs(long_path(node_dir), exist_ok=True)
         progress.update(task_id, description=f"[new] {filename}")
         if att.download_url:
             # Ultra: stáhni přímo přes URL z contentDetail.{handler}.file.permanentUrl
@@ -223,7 +225,7 @@ class Downloader:
         if not item.body:
             return False, 0
 
-        node_dir.mkdir(parents=True, exist_ok=True)
+        os.makedirs(long_path(node_dir), exist_ok=True)
         rendered = item.body
         if self.html_processor is not None:
             try:
@@ -243,9 +245,10 @@ class Downloader:
             f"<body>{rendered}</body></html>\n"
         )
         tmp = index_path.with_suffix(".html.tmp")
-        tmp.write_text(wrapped, encoding="utf-8")
-        tmp.replace(index_path)
-        size = index_path.stat().st_size
+        with open(long_path(tmp), "w", encoding="utf-8") as f:
+            f.write(wrapped)
+        os.replace(long_path(tmp), long_path(index_path))
+        size = os.stat(long_path(index_path)).st_size
         self._manifest[rel_path] = _ManifestEntry(
             path=rel_path,
             sha256=self._sha256(index_path),
@@ -262,7 +265,7 @@ class Downloader:
 
     def run(self) -> DownloadStats:
         self._load_manifest()
-        self.course_root.mkdir(parents=True, exist_ok=True)
+        os.makedirs(long_path(self.course_root), exist_ok=True)
 
         selected: list[tuple[tuple[str, ...], TreeNode]] = []
         for root in self.tree.root:

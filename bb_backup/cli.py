@@ -26,11 +26,27 @@ if sys.platform == "win32":
 app = typer.Typer(
     name="bb-backup",
     help="Lokální záloha kurzů z Blackboard Learn LMS.",
-    no_args_is_help=True,
+    no_args_is_help=False,
     add_completion=False,
 )
 console = Console()
 err_console = Console(stderr=True, style="red")
+
+
+@app.callback(invoke_without_command=True)
+def _default(ctx: typer.Context) -> None:
+    """Bez argumentů spustí interaktivní wizard."""
+    if ctx.invoked_subcommand is None:
+        from .wizard import run_wizard
+
+        run_wizard()
+
+
+@app.command(help="Interaktivní wizard (alias k `bb-backup` bez argumentů).")
+def wizard() -> None:
+    from .wizard import run_wizard
+
+    run_wizard()
 
 
 def _read_resource(name: str) -> str:

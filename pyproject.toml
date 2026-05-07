@@ -17,6 +17,7 @@ dependencies = [
     "rich>=13.7",
     "pydantic>=2.6",
     "beautifulsoup4>=4.12",
+    "tomli-w>=1.0",
 ]
 
 [project.optional-dependencies]
