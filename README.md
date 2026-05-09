@@ -34,18 +34,26 @@ manually if you want to capture their metadata anyway.
 
 ## Install
 
-### Option A — prebuilt Windows binary (no Python needed)
+### Option A — prebuilt binary (no Python needed)
 
-Pushes to the `release` branch and every `v*` tag publish a standalone
-Windows build via GitHub Actions. The `master` branch is for ongoing
-development and is not built.
+Every push to the `release` branch triggers a GitHub Actions build that
+publishes a tagged GitHub Release with both a **Windows** zip and a
+**Linux** tar.gz attached. The tag is derived from the `version` field in
+`pyproject.toml` — bump it before pushing, otherwise the build will fail
+with a clear "tag already exists" message. The `master` branch is for
+ongoing development and is not built.
 
-1. Open the **Releases** page of this repo (for tagged versions) or the
-   **Actions** tab → latest *Build Windows Executable* run → *Artifacts*
-   (for any release-branch commit; kept 14 days).
-2. Download `bb-backup-windows-x64-*.zip` and unzip it anywhere.
-3. Run `bb-backup.exe` from inside the unzipped folder. No installation,
+1. Open the **Releases** page of this repo and grab the right archive:
+   - Windows: `bb-backup-windows-x64-vX.Y.Z.zip`
+   - Linux: `bb-backup-linux-x64-vX.Y.Z.tar.gz`
+
+   (For unreleased commits, the **Actions** tab also keeps the archives
+   as build artifacts for 14 days.)
+2. Extract anywhere.
+3. Run the binary from inside the extracted folder. No installation,
    no admin rights, no Python.
+   - Windows: `bb-backup.exe`
+   - Linux: `./bb-backup` (run `chmod +x bb-backup` first if needed)
 
 The binary is built with [Nuitka](https://nuitka.net/) in standalone mode
 — it bundles its own Python runtime and all dependencies. The whole folder
