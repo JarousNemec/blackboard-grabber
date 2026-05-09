@@ -14,7 +14,7 @@ permissions:
 jobs:
   test-and-build:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
@@ -35,6 +35,16 @@ jobs:
       - name: Run tests
         run: pytest -q
 
+      - name: Cache Nuitka build outputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Local\Nuitka\Nuitka\Cache
+            ~\AppData\Local\Nuitka\nuitka\Cache
+          key: nuitka-${{ runner.os }}-py311-${{ hashFiles('pyproject.toml', 'launcher.py', 'bb_backup/**/*.py') }}
+          restore-keys: |
+            nuitka-${{ runner.os }}-py311-
+
       - name: Build standalone exe with Nuitka
         run: |
           python -m nuitka `
@@ -53,7 +63,10 @@ jobs:
             --include-package=typer `
             --include-package=click `
             --include-package=bs4 `
-            --enable-plugin=anti-bloat `
+            --nofollow-import-to=pygments `
+            --nofollow-import-to=rich.syntax `
+            --nofollow-import-to=IPython `
+            --nofollow-import-to=lxml `
             --company-name="bb-backup" `
             --product-name="bb-backup" `
             --file-version=0.1.0.0 `
