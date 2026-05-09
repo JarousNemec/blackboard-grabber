@@ -36,12 +36,13 @@ manually if you want to capture their metadata anyway.
 
 ### Option A — prebuilt Windows binary (no Python needed)
 
-Each push to `master` and every `v*` tag publishes a standalone Windows
-build via GitHub Actions.
+Pushes to the `release` branch and every `v*` tag publish a standalone
+Windows build via GitHub Actions. The `master` branch is for ongoing
+development and is not built.
 
 1. Open the **Releases** page of this repo (for tagged versions) or the
    **Actions** tab → latest *Build Windows Executable* run → *Artifacts*
-   (for any commit).
+   (for any release-branch commit; kept 14 days).
 2. Download `bb-backup-windows-x64-*.zip` and unzip it anywhere.
 3. Run `bb-backup.exe` from inside the unzipped folder. No installation,
    no admin rights, no Python.
