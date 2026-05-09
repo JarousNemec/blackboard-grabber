@@ -50,6 +50,7 @@ jobs:
           python -m nuitka `
             --standalone `
             --assume-yes-for-downloads `
+            --lto=no `
             --output-dir=dist `
             --output-filename=bb-backup.exe `
             --include-package=bb_backup `
@@ -57,16 +58,18 @@ jobs:
             --include-package=textual `
             --include-package-data=textual `
             --include-package=rich `
+            --include-package=pygments `
             --include-package=tomli_w `
             --include-package=pydantic `
             --include-package=pydantic_core `
             --include-package=typer `
             --include-package=click `
             --include-package=bs4 `
-            --nofollow-import-to=pygments `
-            --nofollow-import-to=rich.syntax `
             --nofollow-import-to=IPython `
             --nofollow-import-to=lxml `
+            --nofollow-import-to=tkinter `
+            --nofollow-import-to=PIL `
+            --nofollow-import-to=numpy `
             --company-name="bb-backup" `
             --product-name="bb-backup" `
             --file-version=0.1.0.0 `
