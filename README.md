@@ -68,6 +68,21 @@ source .venv/bin/activate
 pip install -e .
 ```
 
+### Option C — local wrapper (no PATH, Windows)
+
+After Option B, you can use the included `bb.bat` to call the tool from any
+directory without activating the venv or adding it to `PATH`. The wrapper
+resolves the venv next to itself and forwards all arguments.
+
+```cmd
+cd C:\path\to\my-backups
+C:\path\to\bb-backup-repo\bb.bat
+```
+
+`config.toml`, `cookies.txt`, `output/`, `state/`, and `logs/` are read and
+written relative to the current working directory, so `cd` to your backup
+folder before calling the wrapper.
+
 ## Quick start (wizard)
 
 The fastest way is the interactive wizard — it walks you through everything
