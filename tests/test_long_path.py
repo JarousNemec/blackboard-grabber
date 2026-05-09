@@ -53,8 +53,12 @@ def test_long_path_normalizes_relative():
 
 def test_open_with_very_long_path(tmp_path):
     """End-to-end: vytvoř cestu > 260 znaků a ověř, že open() projde
-    přes long_path() obal. Na non-Windows tohle samozřejmě prošlo už dřív
-    (bez limitu), tady jen kontrolujeme, že náš helper nic nerozbije."""
+    přes long_path() obal. Reprodukuje Windows MAX_PATH bug — na POSIX
+    je long_path() jen passthrough (pokryté v test_long_path_passthrough_on_posix),
+    a navíc CI Linux runnery mají kratší tmp_path, takže by se přes 260
+    znaků nedostaly bez umělého protahování. Skipujeme na non-Windows."""
+    if sys.platform != "win32":
+        pytest.skip("Windows-only — POSIX nemá MAX_PATH limit a long_path je passthrough")
     # Postavíme vnořený strom hluboké cesty s unicode jmény (typická
     # Blackboard struktura kurzu). Cílíme nad 260 znaků celkové délky.
     parent = tmp_path
